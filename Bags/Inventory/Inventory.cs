@@ -40,8 +40,8 @@ public class Inventory : MonoBehaviour
                 Debug.LogError("物品槽已满!!!");
                 return false;
             }
-            Debug.Log("slot = " + slot);
-            Debug.Log("item = " + item);
+            //Debug.Log("slot = " + slot);
+            //Debug.Log("item = " + item);
             // 添加物品
             slot.StorItem(item);
         } else

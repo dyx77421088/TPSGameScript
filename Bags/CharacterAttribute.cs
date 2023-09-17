@@ -1,4 +1,5 @@
 using Bags;
+using TPSShoot;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,7 +27,7 @@ public class CharacterAttribute : MonoBehaviour
     void Start()
     {
         attributeText = GetComponent<Text>();
-        player = GameObject.Find("PlayerBag").GetComponent<Player>();
+        player = PlayerBehaviour.Instance.playerAttribute;
 
         
     }

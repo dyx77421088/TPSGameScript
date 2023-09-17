@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TPSShoot.Bags;
+using TPSShoot.Manger;
 using UnityEngine;
 
 namespace TPSShoot
@@ -39,6 +41,12 @@ namespace TPSShoot
         /// </summary>
         private void OnFireRequest()
         {
+            if (PlayerBagBehaviour.Instance.IsOpenBag) return;
+            if (Cursor.visible)
+            {
+                Events.GameResume.Call();
+                return;
+            }
             // 一些状态下不能开枪
             if (IsReload || IsWeapingWeapon || !CurrentWeapon || !CurrentWeapon.CanFire) return;
 
@@ -158,6 +166,7 @@ namespace TPSShoot
             if (CurrentWeapon)
             {
                 CurrentWeapon.gameObject.SetActive(false);
+                Events.PlayerHideWeapon.Call();
             }
             if (IsNoWeapon)
             {
@@ -168,6 +177,7 @@ namespace TPSShoot
             {
                 CurrentWeapon = weaponSettings.allWeapon[currentWeaponIndex];
                 CurrentWeapon.gameObject.SetActive(true);
+                Events.PlayerShowWeapon.Call();
             }
             
         }

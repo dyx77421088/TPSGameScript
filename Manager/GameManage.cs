@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TPSShoot.Bags;
 using UnityEngine;
 
 public class GameManage : MyMonoInstance<GameManage>
@@ -13,20 +14,20 @@ public class GameManage : MyMonoInstance<GameManage>
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            ShowMouse();
-        }
-        // 如果打开背包就显示鼠标光标
-        if (BagsManager.Instance.IsOpenBag())
-        {
-            ShowMouse();
-        }
-        else if (Input.GetMouseButton(0))
-        {
-            // 未打开背包按鼠标左键隐藏
-            HideMouse();
-        }
+        //if (Input.GetKeyDown(KeyCode.Escape))
+        //{
+        //    ShowMouse();
+        //}
+        //// 如果打开背包就显示鼠标光标
+        //if (PlayerBagBehaviour.Instance.IsOpenBag())
+        //{
+        //    ShowMouse();
+        //}
+        //else if (Input.GetMouseButton(0))
+        //{
+        //    // 未打开背包按鼠标左键隐藏
+        //    HideMouse();
+        //}
     }
 
     public void HideMouse()

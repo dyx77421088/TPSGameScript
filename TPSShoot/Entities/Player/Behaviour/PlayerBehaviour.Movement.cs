@@ -1,6 +1,7 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using TPSShoot.Bags;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -42,6 +43,7 @@ namespace TPSShoot
         /// </summary>
         private void UpdateRun()
         {
+            
             // 一些状态下不能切换
             if (InputController.IsRun && !IsReload && !IsJump && !IsFire && 
                 (!IsNoWeapon && _forward > 0.3f || IsNoWeapon) && !IsWeapingWeapon
@@ -122,7 +124,7 @@ namespace TPSShoot
         private void OnJumpRequested()
         {
             // 一些状态下不能跳跃
-
+            if (PlayerBagBehaviour.Instance.IsOpenBag) return;
             // 如果是下蹲状态就从下蹲到正常
             if (IsCrouching)
             {

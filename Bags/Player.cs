@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Bags
 {
-    public class Player : MonoBehaviour
+    public class Player
     {
         private PlayerAttributteSettings _attributte = new PlayerAttributteSettings();
         #region 基础属性
@@ -14,7 +14,6 @@ namespace Bags
         private int baseIntellect = 10; // 智力
         private int baseAgility = 10; // 敏捷
         private int baseStamina = 10; // 体力
-
         public int BaseStrength { get => baseStrength; set => baseStrength = value; }
         public int BaseIntellect { get => baseIntellect; set => baseIntellect = value; }
         public int BaseAgility { get => baseAgility; set => baseAgility = value; }
@@ -66,11 +65,7 @@ namespace Bags
                 Knapsack.Instance.StoryItem(items[index].Id);
             }
 
-            if (Input.GetKeyUp(KeyCode.B))
-            {
-                BagsManager.Instance.OpenOrHideBag();
-                Knapsack.Instance.NoAttributeAndCharacter();
-            }
+            
             if (Input.GetKeyUp(KeyCode.F))
             {
                 Chest.Instance.OpenOrHide();

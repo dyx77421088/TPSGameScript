@@ -14,5 +14,9 @@ namespace TPSShoot
         public static Event ReloadRequest; // 换弹夹的请求
         public static Event JumpRequest; // 跳跃的请求
         public static Event AimRequest; // 瞄准的请求
+
+        public static Event GamePauseRequest; // 暂停游戏的请求
+        public static Event GameResumeRequest; // 继续游戏的请求
+        public static Event BagRequest; // 打开背包或关闭背包的请求
     }
 }

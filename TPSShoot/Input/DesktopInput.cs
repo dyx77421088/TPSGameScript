@@ -13,6 +13,8 @@ namespace TPSShoot
         [Tooltip("跳跃")]public KeyCode jumpKeyCode = KeyCode.Space;
         [Tooltip("换弹")] public KeyCode reloadKeyCode = KeyCode.R;
         [Tooltip("跑")] public KeyCode runKeyCode = KeyCode.LeftShift;
+        [Tooltip("背包")] public KeyCode bagKeyCode = KeyCode.B;
+        [Tooltip("暂停")] public KeyCode pauseKeyCode = KeyCode.Escape;
         public KeyCode[] swapWeaponKeyCodes = 
         {
             KeyCode.Alpha0,
@@ -26,7 +28,18 @@ namespace TPSShoot
 
         private void Awake()
         {
-            
+            Events.PlayerOpenBag += UnLockCursor;
+            Events.GamePause += UnLockCursor;
+            Events.GameResume += LockCursor;
+            Events.PlayerCloseBag += LockCursor;
+        }
+
+        private void OnDestroy()
+        {
+            Events.PlayerOpenBag -= UnLockCursor;
+            Events.GamePause -= UnLockCursor;
+            Events.GameResume -= LockCursor;
+            Events.PlayerCloseBag -= LockCursor;
         }
 
         // Update is called once per frame
@@ -60,6 +73,16 @@ namespace TPSShoot
             {
                 Events.ReloadRequest.Call();
             }
+            // 背包
+            if (Input.GetKeyUp(bagKeyCode))
+            {
+                Events.BagRequest.Call();
+            }
+            // 暂停
+            if (Input.GetKeyDown(pauseKeyCode))
+            {
+                Events.GamePauseRequest.Call();
+            }
             // 一些数字键
             for (int i = 0; i < swapWeaponKeyCodes.Length; i++)
             {
@@ -70,6 +93,23 @@ namespace TPSShoot
                 }
             }
 
+        }
+
+        /// <summary>
+        /// 锁住鼠标
+        /// </summary>
+        private void LockCursor()
+        {
+
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+        private void UnLockCursor()
+        {
+            // 退出全屏模式
+            //Screen.fullScreen = false;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
     }
 }

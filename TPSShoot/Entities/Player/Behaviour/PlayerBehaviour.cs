@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TPSShoot.Bags;
 using UnityEngine;
 
 namespace TPSShoot
@@ -50,6 +51,12 @@ namespace TPSShoot
 
         private void Update()
         {
+            if (PlayerBagBehaviour.Instance.IsOpenBag)
+            {
+                _animator.enabled = false;
+                return;
+            }
+            _animator.enabled = true;
             // 检测是否着地
             UpdateGround();
             // 行走

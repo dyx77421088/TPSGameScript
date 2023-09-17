@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TPSShoot.Bags;
 using UnityEngine;
 
 namespace TPSShoot
@@ -36,6 +37,7 @@ namespace TPSShoot
 
             public override void OnUpdate()
             {
+                if (PlayerBagBehaviour.Instance.IsOpenBag) return;
                 // 修改摄像头和一些坐标的parent的位置和角色一致
                 UpdateTPSCamera();
                 // y轴旋转
