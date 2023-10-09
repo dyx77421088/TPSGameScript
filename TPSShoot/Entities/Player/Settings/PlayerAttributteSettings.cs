@@ -23,6 +23,7 @@ namespace TPSShoot
 
         [Header("体力换成其它的属性")]
         [Tooltip("一点体力换成的血量")] public float stamina2HP = 25;
+        [Tooltip("一点体力换成的每秒回血")] public float stamina2BloodReturn = 0.1f;
         [Tooltip("一点体力换成的防御力")] public float stamina2Defensive = 3;
         [Tooltip("一点体力换成的魔法防御力")] public float stamina2MagicDefensive = 3;
     }

@@ -8,6 +8,8 @@ namespace TPSShoot
     /// </summary>
     public partial class MonsterBehaviour
     {
+        private bool isAttacking;
+        public bool IsAttacking { get => isAttacking; set => isAttacking = value; }
         public class MonsterBehaviourAttackStatus : MonsterBehaviourStatus
         {
             private MonsterBehaviour _mb;
@@ -41,7 +43,8 @@ namespace TPSShoot
             private bool IsPlayerLost()
             {
                 // 看不到角色了
-                return !_mb.IsCanLookPlayer();
+                //return !_mb.IsCanLookPlayer();
+                return _mb.GetSqrDistance() > _mb.distance && !_mb.isHit;
             }
         }
     }

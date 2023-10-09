@@ -16,11 +16,14 @@ namespace TPSShoot
         public bool IsReload { get; private set;} // 换子弹
         public bool IsWeapingWeapon { get; private set;} // 换武器
         public bool IsNoWeapon { get; private set; } // 没有武器的状态
+        public bool IsGunWeapon { get; private set; } // 枪的状态
+        public bool IsSwordWeapon { get; private set; } // 剑的状态
         public Vector3 FirePoint { get; private set; } // 从屏幕中点发射射线击中的位置，子弹实例化会lookat它
         public Transform FireObject { get; private set; } // 从屏幕中点发射射线击中的目标
 
         // 当前使用的武器
         public PlayerWeapon CurrentWeapon { get { return weaponSettings.currentWeapon; } set { weaponSettings.currentWeapon = value; } } // 当前角色使用的武器
+        public PlayerGun CurrentGun { get => (PlayerGun)CurrentWeapon; }
         public int currentWeaponIndex { get; private set; } = -1;
 
         private Coroutine isFireCoroutine;
@@ -42,13 +45,11 @@ namespace TPSShoot
         private void OnFireRequest()
         {
             if (PlayerBagBehaviour.Instance.IsOpenBag) return;
-            if (Cursor.visible)
-            {
-                Events.GameResume.Call();
-                return;
-            }
+            // 鼠标移出游戏点击后重新隐藏鼠标
+            if ( IsPauseGame()) return;
+            if (CurrentWeapon is not PlayerGun) return;
             // 一些状态下不能开枪
-            if (IsReload || IsWeapingWeapon || !CurrentWeapon || !CurrentWeapon.CanFire) return;
+            if (IsReload || IsWeapingWeapon || !CurrentWeapon || !CurrentGun.CanFire) return;
 
             if (isFireCoroutine != null) StopCoroutine(isFireCoroutine);
             // 正在开火
@@ -62,7 +63,8 @@ namespace TPSShoot
         private void OnReloadRequest()
         {
             if (!CurrentWeapon) return;
-            if (!CurrentWeapon.CanReload) return;
+            if (CurrentWeapon is not PlayerGun) return;
+            if (!CurrentGun.CanReload) return;
             Reload();
         }
         #endregion
@@ -134,8 +136,10 @@ namespace TPSShoot
         /// </summary>
         private void ChangeCurrentWeapon(int index)
         {
-            SetChangeWeaponAnimator(false);
             currentWeaponIndex = index;
+            SetChangeWeaponAnimator(false);
+
+            
         }
         /// <summary>
         /// 设置改变武器的动画和音乐
@@ -149,7 +153,7 @@ namespace TPSShoot
             // 设置当前状态，是否为无武器状态
             IsNoWeapon = isHide;
             // 设置武器状态
-            _animator.SetInteger(PlayerAnimatorParameter.weaponModeInt, isHide ? -1 : 0);
+            _animator.SetInteger(PlayerAnimatorParameter.weaponModeInt, isHide ? -1 : currentWeaponIndex);
         }
 
         #region 回收武器动画的event
@@ -162,11 +166,14 @@ namespace TPSShoot
         /// </summary>
         private void UnequipEvent()
         {
+            
             // 先隐藏
             if (CurrentWeapon)
             {
                 CurrentWeapon.gameObject.SetActive(false);
-                Events.PlayerHideWeapon.Call();
+                IsGunWeapon = IsSwordWeapon = false;
+                if (CurrentWeapon is PlayerGun)  Events.PlayerHideGunWeapon.Call();
+                else if(CurrentWeapon is PlayerSword) Events.PlayerHideSwordWeapon.Call();
             }
             if (IsNoWeapon)
             {
@@ -177,7 +184,18 @@ namespace TPSShoot
             {
                 CurrentWeapon = weaponSettings.allWeapon[currentWeaponIndex];
                 CurrentWeapon.gameObject.SetActive(true);
-                Events.PlayerShowWeapon.Call();
+
+                if (CurrentWeapon is PlayerGun)
+                {
+                    IsGunWeapon = true;
+                    Events.PlayerShowGunWeapon.Call();
+                }
+                else if (CurrentWeapon is PlayerSword)
+                {
+                    IsSwordWeapon = true;
+                    // 如果武器是剑，则需要切换摄像头
+                    Events.PlayerShowSwordWeapon.Call();
+                }
             }
             
         }
@@ -189,13 +207,29 @@ namespace TPSShoot
         #endregion
 
         #region 开枪相关的
+        private bool IsPauseGame()
+        {
+            if (GameManager.Instance.IsGamePause)
+            {
+                Debug.Log("鼠标点击后继续游戏");
+                Events.GameResumeRequest.Call();
+                return true;
+            }
+            else if (!GameManager.Instance.isMobileInput && Cursor.visible)
+            {
+                Debug.Log("锁定");
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+            return false;
+        }
         private void Fire()
         {
-            CurrentWeapon.Fire(FirePoint);
+            CurrentGun.Fire(FirePoint);
             // 角色开火了，一些订阅执行（例如修改子弹数的ui）
             Events.PlayerFire.Call();
             // 如果当前弹夹为0，则需要换弹
-            if (CurrentWeapon.currentBullet == 0)
+            if (CurrentGun.currentBullet == 0)
             {
                 
                 // 换弹夹相关的订阅执行
@@ -238,7 +272,7 @@ namespace TPSShoot
             // 换弹夹动画
             _animator.SetTrigger(PlayerAnimatorParameter.reloadTrigger);
             // 换弹
-            CurrentWeapon.Reload();
+            CurrentGun.Reload();
         }
         /// <summary>
         /// 完成换弹动作后的event
@@ -247,7 +281,7 @@ namespace TPSShoot
         {
             IsReload = false;
             // 完成换弹夹的动作
-            CurrentWeapon.Reloaded();
+            CurrentGun.Reloaded();
             // 换弹结束后的一些订阅执行，例如修改ui
             Events.PlayerReloaded.Call();
         }

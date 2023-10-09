@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TPSShoot.Bags;
 using UnityEngine;
 
 namespace TPSShoot
@@ -18,12 +19,13 @@ namespace TPSShoot
         /// </summary>
         private void OnAimingRequest()
         {
+            if (PlayerBagBehaviour.Instance.IsOpenBag) return;
             // 一些状态下不能进行瞄准
             if (!CurrentWeapon) return;
             if (IsJump) return;
             if (IsReload) return;
             if (IsWeapingWeapon) return;
-
+            if (IsSwordWeapon) return;
             if (IsAiming)
             {
                 AimingOut();

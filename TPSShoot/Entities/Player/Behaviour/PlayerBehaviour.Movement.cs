@@ -46,7 +46,7 @@ namespace TPSShoot
             
             // 一些状态下不能切换
             if (InputController.IsRun && !IsReload && !IsJump && !IsFire && 
-                (!IsNoWeapon && _forward > 0.3f || IsNoWeapon) && !IsWeapingWeapon
+                (IsGunWeapon && _forward > 0.3f || IsNoWeapon || IsSwordWeapon) && !IsWeapingWeapon
                 && !IsAiming
             ) IsRuning = true;
             else IsRuning = false;
@@ -56,6 +56,9 @@ namespace TPSShoot
 
         private void UpdateMovementSpeed()
         {
+            // 剑的攻击状态下不能移动
+            if (IsSwordAttack) return;
+
             Vector3 movement = new Vector3(_right, 0, _forward);
             movement.Normalize();
 
@@ -125,6 +128,8 @@ namespace TPSShoot
         {
             // 一些状态下不能跳跃
             if (PlayerBagBehaviour.Instance.IsOpenBag) return;
+            if (IsSwordAttack) return;
+            if (IsJump) return;
             // 如果是下蹲状态就从下蹲到正常
             if (IsCrouching)
             {

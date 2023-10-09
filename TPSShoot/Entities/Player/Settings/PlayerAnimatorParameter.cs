@@ -18,6 +18,13 @@ namespace TPSShoot
         public static readonly string isRunBool = "IsRun"; // ±¼ÅÜ×´Ì¬
         public static readonly string isJumpBool = "IsJump"; // ÌøÔ¾×´Ì¬
         public static readonly string isGoundBool = "IsGround"; // ×ÅµØ×´Ì¬
+        public static readonly string diedTrigger = "Die"; // ËÀÍö
+
+        public static readonly string swordAttackTrigger = "SwordAttack"; // ½£¹¥»÷
+        public static readonly string swordAttackModeInt = "SwordAttackMode"; // ½£¹¥»÷µÄÄ£Ê½
+        public static readonly string swordAttackIntervalFloat = "SwordAttackInterval"; // ½£¹¥»÷µÄÄ£Ê½
+
+
 
     }
 }

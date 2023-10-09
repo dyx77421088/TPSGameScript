@@ -1,4 +1,8 @@
+using BehaviorDesigner.Runtime;
+using BehaviorDesigner.Runtime.Tasks.Unity.UnityCharacterController;
 using System.Collections;
+using TPSShoot.Bags;
+using TPSShoot.Utils;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
@@ -15,6 +19,7 @@ namespace TPSShoot
     public partial class MonsterBehaviour : MonoBehaviour
     {
         [Header("观察到player的一些属性")]
+        [Tooltip("最近距离")]public float minDistance = 3 * 3;
         [Tooltip("距离")]public float distance = 10 * 10;
         [Tooltip("视角")] public float playerRadius = 75;
         [Tooltip("从哪个位置开始观察")]public Transform visionPoint;
@@ -30,11 +35,12 @@ namespace TPSShoot
 
         [Header("怪物的一些属性")]
         [Tooltip("受伤状态持续时间")] public float hitTime = 10;
+        [Tooltip("受伤动画的cd")] public float hitAnimCD = 5;
         [Tooltip("寻路速度")] public float runSpeed = 5;
         [Tooltip("回到出生点的速度")] public float toBirthSpeed = 8;
         [Tooltip("死亡时间")] public float dieTime = 8;
         public MonsterAttribute monsterAttribute = new MonsterAttribute();
-
+        
 
         private CharacterController _characterController;
         private Animator _animator;
@@ -48,25 +54,28 @@ namespace TPSShoot
         private static readonly int _dieHash = Animator.StringToHash("Die");
         private static readonly int _hitHash = Animator.StringToHash("Hit");
 
+        private bool isPause;
         // 状态
         private MonsterBehaviourIdleStatus _idleStatus;
         private MonsterBehaviourAttackStatus _attackStatus;
         private MonsterBehaviourChaseStatus _chaseStatus;
         private MonsterBehaviourToBirthStatus _toBirthStatus;
         private MonsterBehaviourDiedStatus _diedStatus;
+        private MonsterBehaviourHitStatus _hitStatus;
         private MonsterBehaviourStatus _status;
 
         // 委派（必须放类里面定义，因为每个monster都是独立的）
         public event System.Action onMonsterHPChange;
         public event System.Action onMonsterDied;
+        public event System.Action onMonsterHitAnim;
 
         private void Start()
         {
             _characterController = GetComponent<CharacterController>();
             _animator = GetComponent<Animator>();
             _agent = GetComponent<NavMeshAgent>();
-            _playerBehaviour = PlayerBehaviour.Instance;
 
+            if (_playerBehaviour == null) _playerBehaviour = PlayerBehaviour.Instance;
             _birthPoint = transform.position;
 
             _idleStatus = new MonsterBehaviourIdleStatus(this);
@@ -74,42 +83,121 @@ namespace TPSShoot
             _chaseStatus = new MonsterBehaviourChaseStatus(this);
             _toBirthStatus = new MonsterBehaviourToBirthStatus(this);
             _diedStatus = new MonsterBehaviourDiedStatus(this);
+            _hitStatus = new MonsterBehaviourHitStatus(this);
 
             _status = _idleStatus;
+            // 初始化等级
+            monsterAttribute.grade = RandomUtils.RandomInt(monsterAttribute.minGrade, monsterAttribute.maxGrade);
+            // 初始化属性
+            monsterAttribute.StartInit();
+
         }
         private void Update()
         {
+            if (isPause) return;
             _status?.OnUpdate();
+            //UpdateGravity();
         }
 
         private void Awake()
         {
             onMonsterDied += OnDied;
+            onMonsterHitAnim += OnHitAnim;
+            Events.PlayerOpenBag += OnPause;
+            Events.PlayerCloseBag += OnResume;
+            Events.GamePause += OnPause;
+            Events.GameResume += OnResume;
+
+            Events.PlayerLoaded += OnPlayerLoaded;
         }
         private void OnDestroy()
         {
             onMonsterDied -= OnDied;
+            onMonsterHitAnim -= OnHitAnim;
+            Events.PlayerOpenBag -= OnPause;
+            Events.PlayerCloseBag -= OnResume;
+            Events.GamePause -= OnPause;
+            Events.GameResume -= OnResume;
+            Events.PlayerLoaded -= OnPlayerLoaded;
         }
 
-
+        private void OnPlayerLoaded()
+        {
+            Debug.Log("进来赋值了！！！");
+            _playerBehaviour = PlayerBehaviour.Instance;
+        }
         private void OnDied()
         {
             ChangeStatus(_diedStatus);
         }
 
+        private void OnPause()
+        {
+            _animator.enabled = false;
+            isPause = true;
+
+            _agent.isStopped = true;
+        }
+        private void OnResume()
+        {
+            _animator.enabled = true;
+            isPause = false;
+
+            _agent.isStopped = false;
+        }
+        // hit动画状态
+        private void OnHitAnim()
+        {
+            if (canHitAnim && !isDied)
+            {
+                StartCoroutine(hitAnimIE());
+                _animator.SetTrigger(_hitHash);
+                ChangeStatus(_hitStatus);
+            }
+
+        }
+        private float _gravity;
+        private bool _resetGravity;
+        private void UpdateGravity()
+        {
+            Debug.Log("111");
+            
+            if (!_characterController.enabled ) return;
+            if (_characterController.isGrounded)
+            {
+                _gravity = 50f;
+                _resetGravity = false;
+            }
+            else
+            {
+                if (!_resetGravity)
+                {
+                    _gravity = 1.2f;
+                    _resetGravity = true;
+                }
+                _gravity += Time.deltaTime * 9.8f;
+            }
+            Debug.Log("进来修改重力了");
+            Vector3 gravityV3 = new Vector3();
+            gravityV3.y -= _gravity;
+            _characterController.Move(gravityV3 * Time.deltaTime);
+        }
         #region 血量之类的
         private bool isHit;
+        private bool isHitAnim;
+        private bool canHitAnim = true; // 能不能播放hit动画
         private Coroutine hitIe;
         /// <summary>
         /// 受伤
         /// </summary>
-        public void OnChangeHP(int attack = 0, int magicAttack = 0)
+        public void OnChangeHP(int grade, int attack = 0, int magicAttack = 0)
         {
+            Debug.Log("受伤");
             // 受到伤害
             if (hitIe != null) { StopCoroutine(hitIe); }
             hitIe = StartCoroutine(hitIE());
-
-            OnHit(attack, magicAttack);
+            
+            OnHit(grade, attack, magicAttack);
             
         }
 
@@ -118,11 +206,22 @@ namespace TPSShoot
             isHit = true;
             yield return new WaitForSeconds(hitTime);
             isHit = false;
+            Events.TargetHide.Call(monsterAttribute, null);
+        }
+        private IEnumerator hitAnimIE()
+        {
+            canHitAnim = false; 
+            isHitAnim = true;
+            yield return new WaitForSeconds(2);
+            isHitAnim = false; 
+            yield return new WaitForSeconds(hitAnimCD);
+            canHitAnim = true;
+
         }
         /// <summary>
         /// 加血
         /// </summary>
-        private void OnAddHP(int add)
+        private void OnAddHP(float add)
         {
             AddHP(add);
         }
@@ -162,6 +261,7 @@ namespace TPSShoot
         /// <returns></returns>
         private bool IsAngleOfView()
         {
+            if (_playerBehaviour == null) return false;
             // 如果当前帧已经判断过了
             if (chacheIsAngleOfViewFrame == Time.frameCount)
             {
@@ -210,6 +310,7 @@ namespace TPSShoot
         /// </summary>
         private float GetSqrDistance()
         {
+            if (_playerBehaviour == null) return Mathf.Infinity;
             // 计算平方距离，避免开平方
             return Vector3.SqrMagnitude(transform.position - _playerBehaviour.transform.position);
         }
@@ -251,7 +352,7 @@ namespace TPSShoot
         {
             // 能看到角色且在范围内
             if (IsCanLookPlayer() && IsAngleOfView() && GetSqrDistance() < distance) return false;
-
+            if (GetSqrDistance() < minDistance) return false;
             return true;
         }
         /// <summary>
@@ -259,8 +360,9 @@ namespace TPSShoot
         /// </summary>
         private bool CanChangeChase()
         {
-            //Debug.Log(!IsAngleOfView() + " " + (GetSqrDistance() > distance) + " " + (GetSqrDistance() < attackOutSqrDistance));
+            if (IsAttacking) return false;
             if (isHit) return true;
+            if (GetSqrDistance() < minDistance) return true; // 角色靠太近了会被察觉
             // 不在视角范围内
             if (!IsAngleOfView()) return false;
             // player 和 monster 的距离
@@ -285,6 +387,9 @@ namespace TPSShoot
         #endregion
 
         #region 动画的event
+        /// <summary>
+        /// 攻击
+        /// </summary>
         private void OnAttack()
         {
             // 创建一个球体，并返回碰撞体
@@ -298,6 +403,19 @@ namespace TPSShoot
             {
                 c.GetComponent<PlayerBehaviour>().OnHit(monsterAttribute.aggressivity);
             }
+        }
+        private void OnAttackStart()
+        {
+            if (IsAttacking == false) StartCoroutine(AttackFinish());
+        }
+        private void OnAttackFinish()
+        {
+        }
+        private IEnumerator AttackFinish()
+        {
+            IsAttacking = true;
+            yield return new WaitForSeconds(2);
+            IsAttacking = false;
         }
         #endregion
         public class MonsterBehaviourStatus

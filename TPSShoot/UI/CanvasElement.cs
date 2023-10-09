@@ -13,6 +13,8 @@ namespace TPSShoot.UI
         [Range(0f, 10f)]
         public float hideTime;
 
+        public bool IsHide { get; private set; }
+        public bool IsShow { get; private set; }
         protected Coroutine showCorutine, hideCorutine;
         /// <summary>
         /// ¶©ÔÄ
@@ -33,7 +35,8 @@ namespace TPSShoot.UI
             StopShowCoroutine();
 
             gameObject.SetActive(true);
-
+            IsShow = true;
+            IsHide = false;
             StartShow();
             showCorutine = DelayAction(showTime, FinishShow);
         }
@@ -46,10 +49,12 @@ namespace TPSShoot.UI
             StopShowCoroutine();
 
             StartHide();
-            showCorutine = DelayAction(showTime, ()=>
+            hideCorutine = DelayAction(hideTime, ()=>
             {
                 FinishHide();
                 gameObject.SetActive(false);
+                IsHide = true;
+                IsShow = false;
             });
         }
 

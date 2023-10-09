@@ -17,16 +17,16 @@ namespace TPSShoot
         void Start()
         {
             mb = GetComponent<MonsterBehaviour>();
-            pb = PlayerBehaviour.Instance.transform;
-
             mb.onMonsterHPChange += OnChangeHP;
             mb.onMonsterDied += OnDied;
+            Events.PlayerLoaded += OnPlayerLoaded;
         }
 
         private void OnDestroy()
         {
             mb.onMonsterHPChange -= OnChangeHP;
             mb.onMonsterDied -= OnDied;
+            Events.PlayerLoaded -= OnPlayerLoaded;
         }
 
         void Update()
@@ -34,11 +34,17 @@ namespace TPSShoot
             UpdateRotate();
             OnChangeHP();
         }
+
+        private void OnPlayerLoaded()
+        {
+            pb = PlayerBehaviour.Instance.transform;
+        }
         /// <summary>
         /// 只改变y轴的旋转
         /// </summary>
         private void UpdateRotate()
         {
+            if (pb == null) return;
             Vector3 direction = pb.position - HP.position;
             direction.y = 0f; // 将 y 分量设为 0
 
@@ -52,8 +58,8 @@ namespace TPSShoot
 
         private void OnChangeHP()
         {
-            HPImage.fillAmount = mb.GetHPPercentage();
-            HPText.text = mb.GetCurrentHP() + "/" + mb.GetMaxHP();
+            HPImage.fillAmount = mb.monsterAttribute.GetHPPercentage();
+            HPText.text = (int)(mb.monsterAttribute.GetCurrentHP()) + "/" + (int)mb.monsterAttribute.GetMaxHP();
         }
     }
 }

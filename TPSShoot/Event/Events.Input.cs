@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace TPSShoot
 {
@@ -18,5 +15,8 @@ namespace TPSShoot
         public static Event GamePauseRequest; // 暂停游戏的请求
         public static Event GameResumeRequest; // 继续游戏的请求
         public static Event BagRequest; // 打开背包或关闭背包的请求
+
+        public static Event SwordAttackRequest; // 剑攻击请求
+        public static Event<PlayerBehaviour.PlayerSwordAttackMode> SwordSkillAttackRequest; // 剑技能攻击请求
     }
 }

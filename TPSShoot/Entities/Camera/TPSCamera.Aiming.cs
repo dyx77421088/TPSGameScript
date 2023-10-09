@@ -24,7 +24,7 @@ namespace TPSShoot
                 pivotCurrentLocalRotation.x = pivotCurrentLocalRotation.x.Angle();
 
                 tpsCamera.cameraContainer.localPosition = 
-                    PlayerBehaviour.Instance.CurrentWeapon.weaponScopeSettings.scopePosition.localPosition;
+                    PlayerBehaviour.Instance.CurrentGun.weaponScopeSettings.scopePosition.localPosition;
             }
 
             public override void OnExit()

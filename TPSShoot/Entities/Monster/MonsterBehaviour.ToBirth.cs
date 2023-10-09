@@ -18,7 +18,7 @@ namespace TPSShoot
 
             public override void OnEnter()
             {
-                Debug.Log("现在进入了回到出生点状态");
+                //Debug.Log("现在进入了回到出生点状态");
                 _mb._animator.SetFloat(_speedHash, 1);
                 _mb.StartNavAgent(_mb.toBirthSpeed, _mb._birthPoint);
             }

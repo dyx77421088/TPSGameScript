@@ -16,9 +16,16 @@ namespace TPSShoot
         {
             // 一些状态下不需要修改ik
             bool isAimIk = NeedSpineIk();
-            // 瞄准状态
-            _animator.SetBool(PlayerAnimatorParameter.isAimBool, isAimIk);
 
+            if (CurrentWeapon is PlayerGun)
+            {
+                // 瞄准状态
+                _animator.SetBool(PlayerAnimatorParameter.isAimBool, isAimIk);
+            }
+            else
+            {
+                _animator.SetBool(PlayerAnimatorParameter.isAimBool, false);
+            }
             if (!isAimIk) return;
 
             ikSettings.sprine.LookAt(ikSettings.lookAt);
@@ -30,6 +37,7 @@ namespace TPSShoot
             if (IsNoWeapon) return false;
             if (IsRuning) return false;
             if (IsReload) return false;
+            if (IsSwordWeapon) return false;
             return true;
         }
 
@@ -49,8 +57,12 @@ namespace TPSShoot
             _animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
             _animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
 
-            _animator.SetIKPosition(AvatarIKGoal.LeftHand, CurrentWeapon.leftHandIk.position);
-            _animator.SetIKRotation(AvatarIKGoal.LeftHand, CurrentWeapon.leftHandIk.rotation);
+            if (CurrentWeapon is PlayerGun)
+            {
+                _animator.SetIKPosition(AvatarIKGoal.LeftHand, CurrentWeapon.leftHandIk.position);
+                _animator.SetIKRotation(AvatarIKGoal.LeftHand, CurrentWeapon.leftHandIk.rotation);
+            }
+
         }
     }
 }

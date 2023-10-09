@@ -76,6 +76,8 @@ namespace TPSShoot
             /// </summary>
             private void UpdateNewPoint()
             {
+                Debug.Log(_mb._playerBehaviour);
+
                 // 改变目的地
                 _mb._agent.destination = _mb._playerBehaviour.transform.position;
             }

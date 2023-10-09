@@ -13,10 +13,10 @@ namespace TPSShoot.UI
             Events.GamePause += Hide;
             Events.PlayerOpenBag += Hide;
             Events.PlayerDied += Hide;
-            Events.PlayerHideWeapon += Hide;
+            Events.PlayerHideGunWeapon += Hide;
 
             Events.PlayerCloseBag += Show;
-            Events.PlayerShowWeapon += Show;
+            Events.PlayerShowGunWeapon += Show;
             Events.ApplicationLoaded += Show;
             Events.GameResume += Show;
 
@@ -29,10 +29,10 @@ namespace TPSShoot.UI
             Events.GamePause -= Hide;
             Events.PlayerOpenBag -= Hide;
             Events.PlayerDied -= Hide;
-            Events.PlayerHideWeapon -= Hide;
+            Events.PlayerHideGunWeapon -= Hide;
 
             Events.PlayerCloseBag -= Show;
-            Events.PlayerShowWeapon -= Show;
+            Events.PlayerShowGunWeapon -= Show;
             Events.ApplicationLoaded -= Show;
             Events.GameResume -= Show;
 
@@ -41,12 +41,19 @@ namespace TPSShoot.UI
         }
         protected override void StartShow()
         {
+            if (!PlayerBehaviour.Instance.IsGunWeapon )
+            {
+                Hide();
+
+                return;
+            }
             UpdateBullet();
         }
         public void UpdateBullet()
         {
-            PlayerWeapon pw = PlayerBehaviour.Instance.CurrentWeapon;
-            buttleText.text = string.Format("{0}/{1}", pw.currentBullet, pw.bulletsAmount);
+            PlayerGun playerGun = (PlayerGun)PlayerBehaviour.Instance.CurrentWeapon;
+            buttleText.text = string.Format("{0}/{1}", playerGun.currentBullet, playerGun.bulletsAmount);
+            
         }
 
     }
